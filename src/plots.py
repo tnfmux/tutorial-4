@@ -321,3 +321,47 @@ def generate_all_plots(results: dict, output_dir: str = "output/plots"):
 
 if __name__ == "__main__":
     print("plots.py — execute via main.py para gerar os gráficos.")
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 8. GRÁFICO DE BARRAS — RESUMO DE CORRELAÇÕES
+# ─────────────────────────────────────────────────────────────────────
+
+def plot_correlation_summary(corr_summary: "pd.DataFrame", output_dir: str = "output/plots"):
+    """
+    Gráfico de barras comparando Pearson e Spearman
+    nos três contextos: nível, retorno simples, log-retorno.
+    """
+    import matplotlib.patches as mpatches
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    fig.suptitle("Correlação IBOVESPA vs S&P500 por Contexto", fontweight="bold")
+
+    labels = corr_summary.index.tolist()
+    x = range(len(labels))
+    width = 0.35
+
+    pearson  = corr_summary["Pearson r"].tolist()
+    spearman = corr_summary["Spearman r"].tolist()
+
+    bars1 = ax.bar([i - width/2 for i in x], pearson,  width, label="Pearson",  color=COLORS["IBOVESPA"], alpha=0.85)
+    bars2 = ax.bar([i + width/2 for i in x], spearman, width, label="Spearman", color=COLORS["SP500"],    alpha=0.85)
+
+    # Valores em cima das barras
+    for bar in bars1 + bars2:
+        h = bar.get_height()
+        ax.annotate(
+            f"{h:.4f}",
+            xy=(bar.get_x() + bar.get_width() / 2, h),
+            xytext=(0, 4), textcoords="offset points",
+            ha="center", va="bottom", fontsize=9,
+        )
+
+    ax.axhline(0, color="black", linewidth=0.8)
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Coeficiente de Correlação")
+    ax.set_ylim(-0.1, 1.1)
+    ax.legend()
+    plt.tight_layout()
+    _savefig(fig, f"{output_dir}/8_correlacao_resumo.png")

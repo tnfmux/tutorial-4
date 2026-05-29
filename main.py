@@ -14,8 +14,8 @@ import sys
 from datetime import datetime
 
 from src.data_collection import collect_data
-from src.analysis import run_analysis
-from src.plots import generate_all_plots
+from src.analysis import run_analysis, correlation_summary_table
+from src.plots import generate_all_plots, plot_correlation_summary
 
 # ─── Logging ────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -119,6 +119,15 @@ def main():
     # 3. Gráficos
     logger.info("\n[3/3] Gerando gráficos...")
     generate_all_plots(results, output_dir=args.plots_dir)
+
+    # Testes de correlação
+    corr_summary = correlation_summary_table(
+        results["corr_levels"],
+        results["corr_ret_simples"],
+        results["corr_log_ret"],
+        output_dir=args.data_dir,
+    )
+    plot_correlation_summary(corr_summary, output_dir=args.plots_dir)
 
     # Resumo
     print_summary(results)

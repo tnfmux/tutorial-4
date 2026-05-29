@@ -267,3 +267,51 @@ if __name__ == "__main__":
     print(results["stats_levels"].to_string())
     print("\n=== ADF Tests ===")
     print(results["adf"].to_string())
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 7. TABELA RESUMO DE CORRELAÇÕES
+# ─────────────────────────────────────────────────────────────────────
+
+def correlation_summary_table(
+    corr_levels: dict,
+    corr_ret_simples: dict,
+    corr_log_ret: dict,
+    output_dir: str = "data",
+) -> pd.DataFrame:
+    """
+    Monta uma tabela resumo com Pearson, Spearman e p-valor
+    para cada contexto (nível, retorno simples, log-retorno).
+    Salva em CSV e imprime no terminal.
+    """
+    def extract(corr_dict, label):
+        cols = corr_dict["pearson"].columns.tolist()
+        if len(cols) < 2:
+            return {}
+        c1, c2 = cols[0], cols[1]
+        return {
+            "Contexto": label,
+            "Pearson r": round(float(corr_dict["pearson"].loc[c1, c2]), 4),
+            "Pearson p-valor": round(float(corr_dict["pearson_pvalues"].loc[c1, c2]), 6),
+            "Spearman r": round(float(corr_dict["spearman"].loc[c1, c2]), 4),
+            "Significativo (5%)": "Sim" if float(corr_dict["pearson_pvalues"].loc[c1, c2]) < 0.05 else "Não",
+        }
+
+    rows = [
+        extract(corr_levels,      "Nível"),
+        extract(corr_ret_simples, "Retorno Simples"),
+        extract(corr_log_ret,     "Log-Retorno"),
+    ]
+
+    df = pd.DataFrame(rows).set_index("Contexto")
+
+    os.makedirs(output_dir, exist_ok=True)
+    df.to_csv(f"{output_dir}/correlacao_resumo.csv")
+
+    print("\n" + "=" * 55)
+    print("  TESTES DE CORRELAÇÃO — IBOVESPA vs S&P500")
+    print("=" * 55)
+    print(df.to_string())
+    print("=" * 55 + "\n")
+
+    return df
