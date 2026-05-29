@@ -15,7 +15,7 @@ from datetime import datetime
 
 from src.data_collection import collect_data
 from src.analysis import run_analysis, correlation_summary_table
-from src.plots import generate_all_plots, plot_correlation_summary
+from src.plots import generate_all_plots, plot_correlation_summary, plot_descriptive_stats_table
 
 # ─── Logging ────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -128,6 +128,7 @@ def main():
         output_dir=args.data_dir,
     )
     plot_correlation_summary(corr_summary, output_dir=args.plots_dir)
+    plot_descriptive_stats_table(results, output_dir=args.plots_dir)
 
     # Resumo
     print_summary(results)

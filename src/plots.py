@@ -132,7 +132,7 @@ def plot_returns(returns: pd.DataFrame, output_dir: str = "output/plots"):
     ]
 
     for row_idx, (col_ibov, col_sp, label) in enumerate(pairs):
-        for col_idx, (col, name) in enumerate([(col_ibov, "IBOVESPA"), (col_sp, "S&P500")]):
+        for col_idx, (col, name) in enumerate([(col_ibov, "IBOVESPA"), (col_sp, "SP500")]):
             ax = axes[row_idx][col_idx]
             color = COLORS[name]
             ax.plot(returns.index, returns[col], color=color, linewidth=0.6, alpha=0.8)
@@ -365,3 +365,75 @@ def plot_correlation_summary(corr_summary: "pd.DataFrame", output_dir: str = "ou
     ax.legend()
     plt.tight_layout()
     _savefig(fig, f"{output_dir}/8_correlacao_resumo.png")
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 9. TABELA VISUAL — ESTATÍSTICAS DESCRITIVAS
+# ─────────────────────────────────────────────────────────────────────
+
+def plot_descriptive_stats_table(results: dict, output_dir: str = "output/plots"):
+    """
+    Gera uma imagem com tabela de estatísticas descritivas
+    para níveis, retornos simples e log-retornos.
+    """
+    import matplotlib.gridspec as gridspec
+
+    sections = [
+        ("Níveis",          results["stats_levels"]),
+        ("Retorno Simples", results["stats_returns_simples"]),
+        ("Log-Retorno",     results["stats_log_returns"]),
+    ]
+
+    cols_show = ["N", "Média", "Mediana", "Desvio-Padrão", "Mínimo", "Máximo",
+                 "Assimetria", "Curtose", "JB p-valor", "Normal (5%)"]
+
+    n_sections = len(sections)
+    fig, axes = plt.subplots(n_sections, 1, figsize=(14, 3.5 * n_sections))
+    fig.suptitle("Estatísticas Descritivas — IBOVESPA vs S&P500", fontweight="bold", fontsize=14, y=1.01)
+
+    for ax, (label, df) in zip(axes, sections):
+        ax.axis("off")
+
+        # Filtrar colunas disponíveis
+        available = [c for c in cols_show if c in df.columns]
+        data = df[available].copy()
+
+        # Formatar números
+        for col in available:
+            if col in ("N", "Normal (5%)"):
+                continue
+            try:
+                data[col] = data[col].apply(lambda v: f"{float(v):.4f}")
+            except Exception:
+                pass
+
+        table_data = [available] + data.values.tolist()
+        row_labels = [""] + data.index.tolist()
+
+        tbl = ax.table(
+            cellText=data.values,
+            rowLabels=data.index.tolist(),
+            colLabels=available,
+            cellLoc="center",
+            rowLoc="center",
+            loc="center",
+        )
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(8.5)
+        tbl.scale(1, 1.6)
+
+        # Cabeçalho em verde escuro
+        for (row, col), cell in tbl.get_celld().items():
+            if row == 0:
+                cell.set_facecolor("#1a5276")
+                cell.set_text_props(color="white", fontweight="bold")
+            elif col == -1:
+                cell.set_facecolor("#d5e8f5")
+                cell.set_text_props(fontweight="bold")
+            elif row % 2 == 0:
+                cell.set_facecolor("#f2f2f2")
+
+        ax.set_title(label, fontweight="bold", fontsize=11, pad=4, loc="left")
+
+    plt.tight_layout()
+    _savefig(fig, f"{output_dir}/9_estatisticas_descritivas.png")
